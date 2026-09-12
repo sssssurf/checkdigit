@@ -1,0 +1,8 @@
+import {
+  "sssssurf/checkdigit",
+  "moonbitlang/core/env",
+}
+
+options(
+  "is-main": true,
+)
