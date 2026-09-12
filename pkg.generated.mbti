@@ -1,0 +1,66 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sssssurf/checkdigit"
+
+// Values
+pub fn card_format(String) -> String?
+
+pub fn card_valid(String) -> Bool
+
+pub fn damm_check_digit(String) -> Int?
+
+pub fn damm_valid(String) -> Bool
+
+pub fn detect_brand(String) -> CardBrand
+
+pub fn iban_assemble(String, String) -> String?
+
+pub fn iban_bban(String) -> String?
+
+pub fn iban_check_digits(String, String) -> String?
+
+pub fn iban_country(String) -> String?
+
+pub fn iban_expected_length(String) -> Int?
+
+pub fn iban_format(String) -> String?
+
+pub fn iban_normalize(String) -> String
+
+pub fn iban_valid(String) -> Bool
+
+pub fn imei_check_digit(String) -> Int?
+
+pub fn imei_serial(String) -> String?
+
+pub fn imei_tac(String) -> String?
+
+pub fn imei_valid(String) -> Bool
+
+pub fn luhn_check_digit(String) -> Int?
+
+pub fn luhn_valid(String) -> Bool
+
+pub fn verhoeff_check_digit(String) -> Int?
+
+pub fn verhoeff_valid(String) -> Bool
+
+// Errors
+
+// Types and methods
+pub enum CardBrand {
+  Visa
+  Mastercard
+  Amex
+  Discover
+  Jcb
+  DinersClub
+  UnionPay
+  Maestro
+  Unknown
+}
+pub impl Show for CardBrand
+
+// Type aliases
+
+// Traits
+
