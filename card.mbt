@@ -31,43 +31,6 @@ pub impl Show for CardBrand with fn to_string(self) -> String {
 }
 
 ///|
-/// Read the first `n` characters as an integer. None if there are too few
-/// characters or any of them is not a digit.
-fn leading_int(s : String, n : Int) -> Int? {
-  let chars = chars_of(s)
-  if chars.length() < n {
-    return None
-  }
-  let mut v = 0
-  for i = 0; i < n; i = i + 1 {
-    let c = chars[i]
-    if c < '0' || c > '9' {
-      return None
-    }
-    v = v * 10 + (c.to_int() - '0'.to_int())
-  }
-  Some(v)
-}
-
-///|
-/// True when the first `n` digits fall in `[lo, hi]`.
-fn prefix_in(s : String, n : Int, lo : Int, hi : Int) -> Bool {
-  match leading_int(s, n) {
-    Some(v) => v >= lo && v <= hi
-    None => false
-  }
-}
-
-///|
-/// Number of digits, or None if the string holds anything else.
-fn digit_count(s : String) -> Int? {
-  match digits_of(s) {
-    Some(d) => Some(d.length())
-    None => None
-  }
-}
-
-///|
 /// Identify the card network from its issuer range. The most specific ranges
 /// are tested first (Discover's 622126-622925 range overlaps UnionPay's 62).
 pub fn detect_brand(s : String) -> CardBrand {
