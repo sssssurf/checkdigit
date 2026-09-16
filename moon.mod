@@ -3,7 +3,7 @@
 
 name = "sssssurf/checkdigit"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.mbt.md"
 
@@ -11,6 +11,15 @@ repository = "https://github.com/sssssurf/checkdigit"
 
 license = "Apache-2.0"
 
-keywords = [ "checkdigit", "luhn", "iban", "imei", "validation" ]
+keywords = [
+  "checkdigit",
+  "luhn",
+  "iban",
+  "imei",
+  "isin",
+  "vin",
+  "lei",
+  "validation",
+]
 
-description = "Check-digit algorithms and identifier validation for MoonBit: Luhn, Verhoeff, Damm, credit cards, IBAN, IMEI"
+description = "Check-digit algorithms and identifier validation for MoonBit: Luhn, Verhoeff, Damm, payment cards, IBAN, IMEI, resident IDs, Aadhaar, VIN, ISIN, LEI"
