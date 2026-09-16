@@ -197,3 +197,110 @@ test "isin_expanded writes two digits per letter" {
   assert_eq(isin_expanded("123").unwrap(), "123")
   assert_true(isin_expanded("US-1") is None)
 }
+
+///|
+test "uscc tables describe the same 31-character code set" {
+  assert_eq(uscc_chars.length(), 31)
+  assert_eq(uscc_weights.length(), 17)
+  for i = 0; i < 31; i = i + 1 {
+    assert_eq(uscc_value(uscc_chars[i]).unwrap(), i)
+  }
+  // I, O, S, V and Z have no value; every other letter does.
+  for c in ['I', 'O', 'S', 'V', 'Z'] {
+    assert_true(uscc_value(c) is None)
+  }
+  assert_eq(uscc_value('A').unwrap(), 10)
+  assert_eq(uscc_value('H').unwrap(), 17)
+  assert_eq(uscc_value('J').unwrap(), 18)
+  assert_eq(uscc_value('N').unwrap(), 22)
+  assert_eq(uscc_value('Y').unwrap(), 30)
+  assert_true(uscc_value('-') is None)
+  assert_true(uscc_value(' ') is None)
+}
+
+///|
+test "uscc weights are the powers of three modulo 31" {
+  // The specification derives them this way rather than listing them.
+  let mut p = 1
+  let mut i = 0
+  while i < 17 {
+    assert_eq(uscc_weights[i], p)
+    p = p * 3 % 31
+    i = i + 1
+  }
+}
+
+///|
+test "cpf_digit folds the two remainders needing two digits" {
+  assert_eq(cpf_digit(0), 0)
+  assert_eq(cpf_digit(1), 0)
+  assert_eq(cpf_digit(2), 9)
+  assert_eq(cpf_digit(10), 1)
+  assert_eq(cpf_digit(11), 0)
+  assert_eq(cpf_digit(12), 0)
+  assert_eq(cpf_digit(13), 9)
+}
+
+///|
+test "cf tables share a prefix and diverge after J" {
+  // Digits and the first ten letters reuse one sequence in the odd table, and
+  // the even table is the plain value throughout.
+  for i = 0; i < 10; i = i + 1 {
+    assert_eq(cf_odd[i], cf_odd[i + 10])
+    assert_eq(cf_even[i], i)
+    assert_eq(cf_even[i + 10], i)
+  }
+  assert_eq(cf_even[35], 25)
+  assert_eq(cf_odd[35], 23)
+  // Values repeat, so the odd table cannot be derived from the index.
+  assert_eq(cf_odd[10], 1)
+  assert_eq(cf_odd[20], 2)
+}
+
+///|
+test "cf character classes" {
+  assert_eq(cf_month_codes.length(), 12)
+  for c in cf_month_codes {
+    assert_true(cf_month_char(c))
+  }
+  assert_true(cf_month_char('a'))
+  assert_false(cf_month_char('F'))
+  assert_false(cf_month_char('G'))
+  assert_eq(cf_omocodia_letters.length(), 10)
+  assert_true(cf_numeric_char('5'))
+  assert_true(cf_numeric_char('L'))
+  assert_true(cf_numeric_char('v'))
+  assert_false(cf_numeric_char('A'))
+  assert_false(cf_numeric_char('K'))
+  assert_false(cf_numeric_char('-'))
+}
+
+///|
+test "digit_char round-trips every digit" {
+  for i = 0; i < 10; i = i + 1 {
+    assert_eq(digit_char(i), digit_chars[i])
+  }
+  assert_eq(digit_char(-1), '0')
+  assert_eq(digit_char(10), '9')
+}
+
+///|
+test "bsn weights negate the last position only" {
+  assert_eq(bsn_weights.length(), 9)
+  for i = 0; i < 8; i = i + 1 {
+    assert_eq(bsn_weights[i], 9 - i)
+  }
+  assert_eq(bsn_weights[8], -1)
+}
+
+///|
+test "bsn_digits pads the eight-digit form" {
+  assert_eq(bsn_digits("111222333").unwrap().length(), 9)
+  let padded = bsn_digits("10000008").unwrap()
+  assert_eq(padded.length(), 9)
+  assert_eq(padded[0], 0)
+  assert_eq(padded[1], 1)
+  assert_true(bsn_digits("1112223") is None)
+  assert_true(bsn_digits("1112223334") is None)
+  assert_true(bsn_digits("11122233a") is None)
+}

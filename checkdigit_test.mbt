@@ -308,3 +308,153 @@ test "lei check digits and LOU are extracted" {
   assert_eq(lei_lou("529900T8BM49AURSDO55").unwrap(), "5299")
   assert_true(lei_lou("529900T8BM49AURSDO56") is None)
 }
+
+///|
+test "uscc validates registered identifiers" {
+  // Alibaba (China) Co., Ltd., from its published business registration.
+  assert_true(uscc_valid("91330100799655058B"))
+  assert_true(uscc_valid("91350100M000100Y43"))
+  // Lowercase input is accepted.
+  assert_true(uscc_valid("91330100799655058b"))
+  assert_false(uscc_valid("91330100799655058C"))
+  assert_false(uscc_valid("91330100799655058"))
+  assert_false(uscc_valid("91330100799655058BB"))
+}
+
+///|
+test "uscc rejects the five letters outside the code set" {
+  // I, O, S, V and Z are left out so they cannot be read as 1, 0, 5, U and 2.
+  assert_false(uscc_valid("I1330100799655058B"))
+  assert_false(uscc_valid("O1330100799655058B"))
+  assert_false(uscc_valid("S1330100799655058B"))
+  assert_false(uscc_valid("V1330100799655058B"))
+  assert_false(uscc_valid("Z1330100799655058B"))
+  // A control: the same slot with a character that is in neither set.
+  assert_false(uscc_valid("!1330100799655058B"))
+}
+
+///|
+test "uscc check character and division are extracted" {
+  assert_eq(uscc_check_char("91330100799655058").unwrap(), "B")
+  assert_true(uscc_check_char("9133010079965505") is None)
+  assert_eq(uscc_division("91330100799655058B").unwrap(), "330100")
+  assert_true(uscc_division("91330100799655058C") is None)
+}
+
+///|
+test "cpf validates published examples" {
+  assert_true(cpf_valid("11144477735"))
+  assert_true(cpf_valid("52998224725"))
+  assert_false(cpf_valid("11144477736"))
+  assert_false(cpf_valid("1114447773"))
+  assert_false(cpf_valid("111444777350"))
+  assert_false(cpf_valid("1114447773a"))
+  // Punctuation is not accepted, unlike IBAN.
+  assert_false(cpf_valid("111.444.777-35"))
+}
+
+///|
+test "cpf rejects repdigits" {
+  assert_false(cpf_valid("00000000000"))
+  assert_false(cpf_valid("11111111111"))
+  assert_false(cpf_valid("99999999999"))
+}
+
+///|
+test "cpf check digits and formatting" {
+  assert_eq(cpf_check_digits("111444777").unwrap(), "35")
+  assert_eq(cpf_check_digits("529982247").unwrap(), "25")
+  assert_true(cpf_check_digits("11144477") is None)
+  assert_true(cpf_check_digits("11144477a") is None)
+  assert_eq(cpf_format("11144477735").unwrap(), "111.444.777-35")
+  assert_true(cpf_format("1114447773") is None)
+}
+
+///|
+test "cnpj validates published examples" {
+  assert_true(cnpj_valid("11222333000181"))
+  assert_true(cnpj_valid("11444777000161"))
+  assert_false(cnpj_valid("11222333000182"))
+  assert_false(cnpj_valid("1122233300018"))
+  assert_false(cnpj_valid("112223330001811"))
+  assert_false(cnpj_valid("11.222.333/0001-81"))
+}
+
+///|
+test "cnpj rejects repdigits" {
+  assert_false(cnpj_valid("00000000000000"))
+  assert_false(cnpj_valid("11111111111111"))
+}
+
+///|
+test "cnpj check digits and formatting" {
+  assert_eq(cnpj_check_digits("112223330001").unwrap(), "81")
+  assert_eq(cnpj_check_digits("114447770001").unwrap(), "61")
+  assert_true(cnpj_check_digits("11222333000") is None)
+  assert_true(cnpj_check_digits("11222333000a") is None)
+  assert_eq(cnpj_format("11222333000181").unwrap(), "11.222.333/0001-81")
+  assert_true(cnpj_format("1122233300018") is None)
+}
+
+///|
+test "bsn passes the eleven test" {
+  assert_true(bsn_valid("111222333"))
+  assert_true(bsn_valid("123456782"))
+  assert_false(bsn_valid("111222334"))
+  assert_false(bsn_valid("11122233"))
+  assert_false(bsn_valid("1112223334"))
+  assert_false(bsn_valid("11122233a"))
+}
+
+///|
+test "bsn accepts the eight-digit form and rejects all zeroes" {
+  // Older numbers were recorded without the leading zero.
+  assert_true(bsn_valid("10000008"))
+  assert_true(bsn_valid("010000008"))
+  assert_false(bsn_valid("000000000"))
+  assert_false(bsn_valid("00000000"))
+}
+
+///|
+test "bsn check digit is generated" {
+  assert_eq(bsn_check_digit("11122233").unwrap(), 3)
+  assert_eq(bsn_check_digit("12345678").unwrap(), 2)
+  assert_true(bsn_check_digit("1112223") is None)
+  // These eight digits would need a ninth of ten, which is not a digit.
+  assert_true(bsn_check_digit("10000006") is None)
+}
+
+///|
+test "codice fiscale validates published examples" {
+  assert_true(cf_valid("MRNLCU00A01H501J"))
+  assert_true(cf_valid("RSSMRA80A01A952F"))
+  assert_true(cf_valid("MRNLCU00A01Z100P"))
+  assert_true(cf_valid("RSSMRA90P50Z258M"))
+  // Lowercase input is accepted.
+  assert_true(cf_valid("mrnlcu00a01h501j"))
+  assert_false(cf_valid("MRNLCU00A01H501K"))
+  assert_false(cf_valid("MRNLCU00A01H501"))
+}
+
+///|
+test "codice fiscale accepts omocodia substitutions" {
+  // A numeric field may hold one of ten letters when two people would
+  // otherwise share a code.
+  assert_true(cf_valid("MRNLCULLALMH501A"))
+  // Z is not one of those ten, so it cannot stand in a numeric field.
+  assert_false(cf_valid("MRNLCUZZAZAH501J"))
+}
+
+///|
+test "codice fiscale rejects a month letter outside the twelve" {
+  assert_false(cf_valid("MRNLCU00F01H501J"))
+  assert_false(cf_valid("MRNLCU00G01H501J"))
+}
+
+///|
+test "codice fiscale check character is generated" {
+  assert_eq(cf_check_char("MRNLCU00A01H501").unwrap(), "J")
+  assert_eq(cf_check_char("RSSMRA80A01A952").unwrap(), "F")
+  assert_true(cf_check_char("MRNLCU00A01H50") is None)
+  assert_true(cf_check_char("MRNLCU00A01H50!") is None)
+}
