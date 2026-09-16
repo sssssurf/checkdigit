@@ -123,3 +123,77 @@ test "iban helpers implement the ISO 13616 mapping" {
   assert_eq(iban_expected_length("DE").unwrap(), 22)
   assert_true(iban_expected_length("ZZ") is None)
 }
+
+///|
+test "alnum_value expands letters to 10..35" {
+  assert_eq(alnum_value('0').unwrap(), 0)
+  assert_eq(alnum_value('9').unwrap(), 9)
+  assert_eq(alnum_value('A').unwrap(), 10)
+  assert_eq(alnum_value('Z').unwrap(), 35)
+  // Lowercase is folded first.
+  assert_eq(alnum_value('z').unwrap(), 35)
+  assert_true(alnum_value('-') is None)
+  assert_true(alnum_value(' ') is None)
+}
+
+///|
+test "alnum_mod97 matches a direct big-integer evaluation" {
+  // A, B and C expand to 10, 11 and 12, so the digit string is "101112".
+  assert_eq(alnum_mod97(chars_of("ABC")).unwrap(), 101112 % 97)
+  assert_eq(alnum_mod97(chars_of("123")).unwrap(), 123 % 97)
+  assert_eq(alnum_mod97(chars_of("")).unwrap(), 0)
+  assert_true(alnum_mod97(chars_of("A-1")) is None)
+}
+
+///|
+test "alnum_only rejects empty and punctuation" {
+  assert_true(alnum_only("ABC123"))
+  assert_true(alnum_only("abc"))
+  assert_false(alnum_only(""))
+  assert_false(alnum_only("AB C"))
+  assert_false(alnum_only("AB-1"))
+}
+
+///|
+test "cn_id_expected computes the GB 11643 check character" {
+  // Worked example from the standard: the weighted sum is 167, 167 % 11 is 2.
+  let cs = chars_of("11010519491231002")
+  assert_eq(cn_id_expected(cs).unwrap(), 'X')
+  // A non-digit in the payload is rejected.
+  assert_true(cn_id_expected(chars_of("1101051949123100A")) is None)
+}
+
+///|
+test "cn_id_date_plausible bounds the birth date" {
+  assert_true(cn_id_date_plausible(chars_of("11010519491231002X")))
+  assert_true(cn_id_date_plausible(chars_of("11010518000101002X")))
+  assert_true(cn_id_date_plausible(chars_of("11010521991231002X")))
+  assert_false(cn_id_date_plausible(chars_of("11010517991231002X")))
+  assert_false(cn_id_date_plausible(chars_of("11010522001231002X")))
+  assert_false(cn_id_date_plausible(chars_of("11010519490031002X")))
+  assert_false(cn_id_date_plausible(chars_of("11010519491331002X")))
+  assert_false(cn_id_date_plausible(chars_of("11010519490a31002X")))
+}
+
+///|
+test "vin_value transliterates and rejects I, O and Q" {
+  assert_eq(vin_value('1').unwrap(), 1)
+  assert_eq(vin_value('0').unwrap(), 0)
+  assert_eq(vin_value('A').unwrap(), 1)
+  assert_eq(vin_value('H').unwrap(), 8)
+  assert_eq(vin_value('R').unwrap(), 9)
+  assert_eq(vin_value('X').unwrap(), 7)
+  assert_eq(vin_value('z').unwrap(), 9)
+  assert_true(vin_value('I') is None)
+  assert_true(vin_value('O') is None)
+  assert_true(vin_value('Q') is None)
+  assert_true(vin_value('-') is None)
+}
+
+///|
+test "isin_expanded writes two digits per letter" {
+  // A=10, U=30, X=33, V=31, G=16, Z=35, so the ISO example expands as below.
+  assert_eq(isin_expanded("AU0000XVGZA").unwrap(), "103000003331163510")
+  assert_eq(isin_expanded("123").unwrap(), "123")
+  assert_true(isin_expanded("US-1") is None)
+}
