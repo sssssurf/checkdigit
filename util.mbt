@@ -97,6 +97,26 @@ fn char_str(c : Char) -> String {
 }
 
 ///|
+/// The digits in order, so that a value can be turned back into a character
+/// without doing arithmetic on `Char`.
+let digit_chars : Array[Char] = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+]
+
+///|
+/// The character for a value in 0..9. Values outside that range are clamped, so
+/// callers that already range-check their input are unaffected.
+fn digit_char(v : Int) -> Char {
+  if v < 0 {
+    '0'
+  } else if v > 9 {
+    '9'
+  } else {
+    digit_chars[v]
+  }
+}
+
+///|
 /// Remainder modulo 97 after expanding every character to its numeric value:
 /// digits keep their value, letters become 10..35. Returns None when a
 /// character is neither.
