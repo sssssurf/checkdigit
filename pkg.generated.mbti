@@ -6,9 +6,17 @@ pub fn aadhaar_check_digit(String) -> Int?
 
 pub fn aadhaar_valid(String) -> Bool
 
+pub fn bsn_check_digit(String) -> Int?
+
+pub fn bsn_valid(String) -> Bool
+
 pub fn card_format(String) -> String?
 
 pub fn card_valid(String) -> Bool
+
+pub fn cf_check_char(String) -> String?
+
+pub fn cf_valid(String) -> Bool
 
 pub fn cn_id_birthdate(String) -> String?
 
@@ -17,6 +25,18 @@ pub fn cn_id_check_char(String) -> String?
 pub fn cn_id_region(String) -> String?
 
 pub fn cn_id_valid(String) -> Bool
+
+pub fn cnpj_check_digits(String) -> String?
+
+pub fn cnpj_format(String) -> String?
+
+pub fn cnpj_valid(String) -> Bool
+
+pub fn cpf_check_digits(String) -> String?
+
+pub fn cpf_format(String) -> String?
+
+pub fn cpf_valid(String) -> Bool
 
 pub fn damm_check_digit(String) -> Int?
 
@@ -63,6 +83,12 @@ pub fn lei_valid(String) -> Bool
 pub fn luhn_check_digit(String) -> Int?
 
 pub fn luhn_valid(String) -> Bool
+
+pub fn uscc_check_char(String) -> String?
+
+pub fn uscc_division(String) -> String?
+
+pub fn uscc_valid(String) -> Bool
 
 pub fn verhoeff_check_digit(String) -> Int?
 
