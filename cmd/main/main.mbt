@@ -18,6 +18,11 @@ fn main {
     "card" => run_card(input)
     "iban" => run_iban(input)
     "imei" => run_imei(input)
+    "cnid" => run_cn_id(input)
+    "aadhaar" => run_aadhaar(input)
+    "vin" => run_vin(input)
+    "isin" => run_isin(input)
+    "lei" => run_lei(input)
     _ => print_usage()
   }
 }
@@ -33,6 +38,11 @@ fn print_usage() -> Unit {
   println("  checkdigit card     <number>")
   println("  checkdigit iban     <iban>")
   println("  checkdigit imei     <imei>")
+  println("  checkdigit cnid     <resident id number>")
+  println("  checkdigit aadhaar  <12 digits>")
+  println("  checkdigit vin      <vin>")
+  println("  checkdigit isin     <isin>")
+  println("  checkdigit lei      <lei>")
 }
 
 ///|
@@ -115,4 +125,90 @@ fn run_imei(s : String) -> Unit {
     }
   }
   println("status: \{verdict(@checkdigit.imei_valid(s))}")
+}
+
+///|
+/// The first `n` characters of `s`, or None when it is shorter. Used to pull
+/// the payload out of a complete identifier so the expected check character
+/// can be shown alongside the one that is present.
+fn take(s : String, n : Int) -> String? {
+  let buf = StringBuilder()
+  let mut seen = 0
+  for c in s {
+    if seen < n {
+      buf.write_char(c)
+    }
+    seen = seen + 1
+  }
+  if seen < n {
+    None
+  } else {
+    Some(buf.to_string())
+  }
+}
+
+///|
+fn show_check(label : String, body : String?, f : (String) -> String?) -> Unit {
+  match body {
+    Some(b) => show_opt(label, f(b))
+    None => show_opt(label, None)
+  }
+}
+
+///|
+fn run_cn_id(s : String) -> Unit {
+  println("cnid: \{s}")
+  show_opt("region", @checkdigit.cn_id_region(s))
+  show_opt("birth date", @checkdigit.cn_id_birthdate(s))
+  show_check(
+    "expected check character",
+    take(s, 17),
+    @checkdigit.cn_id_check_char,
+  )
+  println("status: \{verdict(@checkdigit.cn_id_valid(s))}")
+}
+
+///|
+fn run_aadhaar(s : String) -> Unit {
+  println("aadhaar: \{s}")
+  match take(s, 11) {
+    Some(body) =>
+      show_digit("expected check digit", @checkdigit.aadhaar_check_digit(body))
+    None => show_digit("expected check digit", None)
+  }
+  println("status: \{verdict(@checkdigit.aadhaar_valid(s))}")
+}
+
+///|
+fn run_vin(s : String) -> Unit {
+  println("vin: \{s}")
+  show_opt("wmi", @checkdigit.vin_wmi(s))
+  show_opt("vis", @checkdigit.vin_vis(s))
+  // The check character sits at position nine, so the whole VIN is the payload.
+  show_check(
+    "expected check character",
+    take(s, 17),
+    @checkdigit.vin_check_char,
+  )
+  println("status: \{verdict(@checkdigit.vin_valid(s))}")
+}
+
+///|
+fn run_isin(s : String) -> Unit {
+  println("isin: \{s}")
+  show_opt("country", @checkdigit.isin_country(s))
+  match take(s, 11) {
+    Some(body) =>
+      show_digit("expected check digit", @checkdigit.isin_check_digit(body))
+    None => show_digit("expected check digit", None)
+  }
+  println("status: \{verdict(@checkdigit.isin_valid(s))}")
+}
+
+///|
+fn run_lei(s : String) -> Unit {
+  println("lei: \{s}")
+  show_opt("lou", @checkdigit.lei_lou(s))
+  show_check("expected check digits", take(s, 18), @checkdigit.lei_check_digits)
+  println("status: \{verdict(@checkdigit.lei_valid(s))}")
 }
