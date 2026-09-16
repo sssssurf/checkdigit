@@ -9,7 +9,9 @@ Check-digit algorithms and identifier validation for MoonBit.
 numbering schemes, and builds the identifier formats on top of them: payment
 cards (ISO/IEC 7812), IBAN bank accounts (ISO 13616), IMEI device numbers
 (3GPP TS 23.003), Chinese resident identity cards (GB 11643), Aadhaar numbers,
-VINs (ISO 3779), ISINs (ISO 6166), and LEIs (ISO 17442).
+VINs (ISO 3779), ISINs (ISO 6166), LEIs (ISO 17442), unified social credit
+identifiers (GB 32100), CPF and CNPJ (Brazil), BSN (Netherlands), and the
+Italian codice fiscale.
 
 ```moonbit nocheck
 ///|
@@ -31,6 +33,11 @@ fn main {
   println(vin_valid("1M8GDM9AXKP042788")) // true
   println(isin_country("US0378331005")) // Some("US")
   println(lei_lou("529900T8BM49AURSDO55")) // Some("5299")
+
+  // Formatting helpers for the identifiers that have a printed form
+  println(cpf_format("11144477735")) // Some("111.444.777-35")
+  println(cnpj_format("11222333000181")) // Some("11.222.333/0001-81")
+  println(uscc_division("91350100M000100Y43")) // Some("350100")
 }
 ```
 
@@ -49,6 +56,11 @@ fn main {
 | VIN (ISO 3779) | `vin_valid`, `vin_check_char`, `vin_wmi`, `vin_vis` |
 | ISIN (ISO 6166) | `isin_valid`, `isin_check_digit`, `isin_country` |
 | LEI (ISO 17442) | `lei_valid`, `lei_check_digits`, `lei_lou` |
+| Unified social credit id (GB 32100) | `uscc_valid`, `uscc_check_char`, `uscc_division` |
+| CPF (Brazil) | `cpf_valid`, `cpf_check_digits`, `cpf_format` |
+| CNPJ (Brazil) | `cnpj_valid`, `cnpj_check_digits`, `cnpj_format` |
+| BSN (Netherlands) | `bsn_valid`, `bsn_check_digit` |
+| Codice fiscale (Italy) | `cf_valid`, `cf_check_char` |
 
 All validators are total: they take a `String` and return `Bool`, or return
 `None` when a value cannot be computed. No exceptions, no panics on bad input.
@@ -93,6 +105,31 @@ All validators are total: they take a `String` and return `Bool`, or return
   reserved zeroes, twelve characters of entity reference, and two check digits
   at the end. Validation expands letters to 10..35 and requires the whole
   identifier to be 1 modulo 97, the same scheme IBAN uses.
+- **Unified social credit identifier** — 18 characters: registration authority,
+  entity category, a six-digit division code, a nine-character organisation
+  code, and a check character. The check character is chosen over a 31-character
+  code set, the digits plus the letters minus `I`, `O`, `S`, `V` and `Z` — the
+  five that read as another character in handwriting. Position `i` carries the
+  weight `3^(i-1) mod 31`, which spreads a single wrong character across the
+  whole sum instead of shifting it by a constant.
+- **CPF and CNPJ** — the Brazilian individual and company registries. Both are
+  two mod-11 check digits over a weighted prefix, with the second digit covering
+  a prefix one character longer than the first; the two weight tables differ
+  only in where the cycle of nine weights restarts. `cpf_format` and
+  `cnpj_format` return the punctuated printed form. All-equal-digit input
+  satisfies the arithmetic but is never issued, so it is rejected.
+- **BSN** — the Dutch citizen service number. This one has no separate check
+  digit: the property holds over all nine digits at once, weighted from nine
+  down to one with the last position negated, and the total must be a multiple
+  of eleven. Negating that last position is what stops a Dutch bank account
+  number, checked with the same weights all positive, from passing as a BSN. The
+  eight-digit form with its leading zero omitted is accepted.
+- **Codice fiscale** — the Italian tax code. Sixteen characters, of which the
+  last is the CIN, computed over the first fifteen with two different value
+  tables: one for the odd positions and one for the even. Validation also checks
+  the required layout, including the twelve month codes, which skip the letters
+  that would spell words, and the omocodia letters that stand in for digits when
+  two people would otherwise share a code.
 
 ## Installation
 
@@ -116,6 +153,11 @@ moon run cmd/main -- aadhaar 234123412346
 moon run cmd/main -- vin 1M8GDM9AXKP042788
 moon run cmd/main -- isin US0378331005
 moon run cmd/main -- lei 529900T8BM49AURSDO55
+moon run cmd/main -- uscc 91350100M000100Y43
+moon run cmd/main -- cpf 11144477735
+moon run cmd/main -- cnpj 11222333000181
+moon run cmd/main -- bsn 111222333
+moon run cmd/main -- cf RSSMRA85T10A562S
 ```
 
 ```text
@@ -144,7 +186,9 @@ status: valid
 | `Han-Wentao/mooncontract` | OpenAPI 契约校验与 mock | 它校验**接口契约**（请求 / 响应结构），属于 API 层；本库处理的是**单个标识符字符串**内部的校验位。 |
 | `ZJH-666-ZJH/moonmrz` | ICAO 9303 机读区（护照 / 签证 MRZ）的 7-3-1 校验位 | 唯一的交集是"校验位"这个概念。它面向**旅行证件 MRZ 文本**，使用 ICAO 9303 的 7-3-1 加权方案；本库面向**支付卡 / 银行账号 / 设备号 / 证券与法人标识**，使用 Luhn、Verhoeff、Damm、ISO 7064 与 mod-97。两者的算法、输入格式、应用领域均不同。 |
 
-在 mooncakes.io 上以 `luhn`、`iban`、`imei`、`aadhaar`、`vin`、`isin`、`lei` 检索，目前**没有任何**模块命中；本库填补的是这一块空白。
+在 mooncakes.io 上以 `luhn`、`iban`、`imei`、`aadhaar`、`vin`、`isin`、`lei`、
+`uscc`、`cpf`、`cnpj`、`bsn`、`codice fiscale` 检索，目前**没有任何**模块命中；
+本库填补的是这一块空白。
 
 ## Testing
 
@@ -152,7 +196,7 @@ status: valid
 moon test
 ```
 
-53 tests cover the three algorithms against published reference vectors, the
+77 tests cover the three algorithms against published reference vectors, the
 issuer-range overlap boundaries, IBAN's published examples, the worked examples
 of each identifier standard, the internal lookup tables, and malformed input.
 The LEI vectors are identifiers registered with GLEIF, so the expected check
@@ -164,10 +208,14 @@ digits come from the registry rather than from a restatement of the algorithm.
 - ISO 13616 — International Bank Account Number (IBAN), mod-97-10
 - 3GPP TS 23.003 — Numbering, addressing and identification (IMEI)
 - GB 11643 — 公民身份号码 (Chinese resident identity card number)
+- GB 32100 — 法人和其他组织统一社会信用代码编码规则 (unified social credit identifier)
 - ISO 3779 — Vehicle Identification Number (VIN), world manufacturer identifier
 - ISO 6166 — International Securities Identification Number (ISIN)
 - ISO 17442 — Legal Entity Identifier (LEI)
 - UIDAI — Aadhaar number specification (Verhoeff check digit)
+- Receita Federal — CPF and CNPJ check-digit specification
+- De Nederlandsche Bank — BSN eleven-test (11-proef)
+- DM 23/12/1976 — Codice fiscale, CIN computation
 - GLEIF — Global LEI registry, `api.gleif.org`
 - H. P. Damm, *Totally anti-symmetric quasigroups for all orders n ≠ 2 mod 4*
 - J. Verhoeff, *Error detecting decimal codes*
