@@ -23,6 +23,11 @@ fn main {
     "vin" => run_vin(input)
     "isin" => run_isin(input)
     "lei" => run_lei(input)
+    "uscc" => run_uscc(input)
+    "cpf" => run_cpf(input)
+    "cnpj" => run_cnpj(input)
+    "bsn" => run_bsn(input)
+    "cf" => run_cf(input)
     _ => print_usage()
   }
 }
@@ -43,6 +48,11 @@ fn print_usage() -> Unit {
   println("  checkdigit vin      <vin>")
   println("  checkdigit isin     <isin>")
   println("  checkdigit lei      <lei>")
+  println("  checkdigit uscc     <unified social credit id>")
+  println("  checkdigit cpf      <cpf>")
+  println("  checkdigit cnpj     <cnpj>")
+  println("  checkdigit bsn      <8 or 9 digits>")
+  println("  checkdigit cf       <codice fiscale>")
 }
 
 ///|
@@ -211,4 +221,54 @@ fn run_lei(s : String) -> Unit {
   show_opt("lou", @checkdigit.lei_lou(s))
   show_check("expected check digits", take(s, 18), @checkdigit.lei_check_digits)
   println("status: \{verdict(@checkdigit.lei_valid(s))}")
+}
+
+///|
+fn run_uscc(s : String) -> Unit {
+  println("uscc: \{s}")
+  show_opt("division", @checkdigit.uscc_division(s))
+  show_check(
+    "expected check character",
+    take(s, 17),
+    @checkdigit.uscc_check_char,
+  )
+  println("status: \{verdict(@checkdigit.uscc_valid(s))}")
+}
+
+///|
+fn run_cpf(s : String) -> Unit {
+  println("cpf: \{s}")
+  show_opt("formatted", @checkdigit.cpf_format(s))
+  show_check("expected check digits", take(s, 9), @checkdigit.cpf_check_digits)
+  println("status: \{verdict(@checkdigit.cpf_valid(s))}")
+}
+
+///|
+fn run_cnpj(s : String) -> Unit {
+  println("cnpj: \{s}")
+  show_opt("formatted", @checkdigit.cnpj_format(s))
+  show_check(
+    "expected check digits",
+    take(s, 12),
+    @checkdigit.cnpj_check_digits,
+  )
+  println("status: \{verdict(@checkdigit.cnpj_valid(s))}")
+}
+
+///|
+fn run_bsn(s : String) -> Unit {
+  println("bsn: \{s}")
+  match take(s, 8) {
+    Some(body) =>
+      show_digit("expected check digit", @checkdigit.bsn_check_digit(body))
+    None => show_digit("expected check digit", None)
+  }
+  println("status: \{verdict(@checkdigit.bsn_valid(s))}")
+}
+
+///|
+fn run_cf(s : String) -> Unit {
+  println("cf: \{s}")
+  show_check("expected check character", take(s, 15), @checkdigit.cf_check_char)
+  println("status: \{verdict(@checkdigit.cf_valid(s))}")
 }
