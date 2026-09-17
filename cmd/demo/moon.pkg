@@ -1,0 +1,7 @@
+import {
+  "sssssurf/checkdigit" @cd,
+}
+
+options(
+  "is-main": true,
+)
