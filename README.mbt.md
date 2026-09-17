@@ -208,6 +208,16 @@ over-long strings, inner spaces, a trailing NUL — to pin down the promise that
 every function is total: invalid input returns `false` or `None`, never a panic.
 With the boundary tests in `checkdigit_test.mbt`, the suite now stands at 88.
 
+The command output recorded in this file and in `docs/reproducible-demo.md` is
+itself checked, so it cannot silently go stale:
+
+```bash
+node scripts/check-docs.mjs
+```
+
+That script re-runs the documented commands and compares the results line by
+line, including the test count quoted above.
+
 ## Development
 
 - [`docs/reproducible-demo.md`](docs/reproducible-demo.md) — how to build, test and

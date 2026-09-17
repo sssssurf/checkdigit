@@ -25,6 +25,13 @@ jobs:
       - name: Test
         run: moon test
 
+      # README.md and docs/reproducible-demo.md both record command output as
+      # literal text. Without this step a renamed field or an extra demo line
+      # would leave the documented output quietly wrong, which is exactly what
+      # the acceptance criteria ask not to happen.
+      - name: Documentation matches real output
+        run: node scripts/check-docs.mjs
+
   # The README and the project description both claim the library compiles for
   # native, wasm and wasm-gc. Verifying only the default target let that claim
   # drift silently, so each target is now built explicitly.
