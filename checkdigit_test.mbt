@@ -458,3 +458,55 @@ test "codice fiscale check character is generated" {
   assert_true(cf_check_char("MRNLCU00A01H50") is None)
   assert_true(cf_check_char("MRNLCU00A01H50!") is None)
 }
+
+///|
+test "cn_id rejects a tampered body digit" {
+  // Flipping a digit in the region or sequence changes the expected check.
+  assert_false(cn_id_valid("11010519491231012X"))
+  assert_false(cn_id_valid("11010619491231002X"))
+  assert_false(cn_id_valid("11010519491231003X"))
+}
+
+///|
+test "cn_id rejects wrong lengths and non-digit bodies" {
+  assert_false(cn_id_valid(""))
+  assert_false(cn_id_valid("11010519491231002"))
+  assert_false(cn_id_valid("11010519491231002XX"))
+  assert_false(cn_id_valid("1101051949123100 2X"))
+  assert_false(cn_id_valid("11010519491231002-"))
+  assert_false(cn_id_valid("11010519491231A02X"))
+  // A full-width digit must not be mistaken for its ASCII counterpart.
+  assert_false(cn_id_valid("11010519491231002０"))
+}
+
+///|
+test "cn_id birth year bounds are inclusive" {
+  // 1799 is one below the accepted lower bound, 2200 one above the top.
+  assert_false(cn_id_valid("110105179912310024"))
+  assert_false(cn_id_valid("110105220001010022"))
+  // The bounds themselves are accepted, provided the check character agrees.
+  assert_true(cn_id_valid("820000180001010010"))
+  assert_true(cn_id_valid("82000021991231001X"))
+}
+
+///|
+test "cn_id accepts dates that are plausible but impossible" {
+  // Documented limitation: month lengths and leap years are not modelled, so
+  // 31 February passes as long as the check character agrees.
+  assert_true(cn_id_valid("110105194902310026"))
+}
+
+///|
+test "cn_id check character agrees with the validator" {
+  // Whatever the generator produces must be accepted by the validator. That
+  // round-trip is what makes the pair usable for building test data.
+  let prefixes = [
+    "11010519491231002", "44052418800101001", "31010120000229123", "50010319991231456",
+    "82000018000101001",
+  ]
+  for p in prefixes {
+    let c = cn_id_check_char(p).unwrap()
+    assert_true(cn_id_valid(p + c))
+    assert_true(cn_id_valid(p + c.to_lower()))
+  }
+}
