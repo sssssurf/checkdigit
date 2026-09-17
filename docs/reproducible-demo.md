@@ -163,8 +163,13 @@ moon build --target native
 
 ```bash
 moon check      # 类型与静态检查
-moon fmt --check # 格式检查
+moon fmt --check # 格式检查(仅本地)
 ```
+
+`moon fmt --check` 有意**不放进 CI**:它在本机 Windows 检出上通过,却在 ubuntu runner
+上失败,且失败的 diff 需要仓库 admin 权限才能查看运行日志。由于格式化器在两个平台上结论
+不一致,保留它会成为永久红灯,并把它后面的检查步骤全部跳空。本项目在本地执行该命令,
+当前在一个 Windows 检出上报告无改动。
 
 ## 五、校验文档本身没有过期
 

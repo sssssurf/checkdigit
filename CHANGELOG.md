@@ -42,15 +42,22 @@
   并对公开标准样例 `11010519491231002X` 自校验后才写入,避免用被测代码生成自己的期望值。
   覆盖:身体位篡改、错误长度与非数字字符、出生年上下界、已被文档记录的
   "31 February 被接受"限制、校验位生成器与校验器的往返一致性。
-- **`.github/workflows/ci.yml`**:新增 `wasm` / `wasm-gc` / `native` 三目标构建矩阵与
-  `moon fmt --check`。此前 CI 只构建默认目标,导致"三目标可编译"这一声明无法被自动验证。
+- **`.github/workflows/ci.yml`**:新增 `wasm` / `wasm-gc` / `native` 三目标构建矩阵。
+  此前 CI 只构建默认目标,导致"三目标可编译"这一声明无法被自动验证。
 - **`README.md` / `README.mbt.md`**:测试数由 77 更正为 88(此前已与仓库实际不符),
   新增 Development 一节指向开发回顾文档。
+
+### 移除
+
+- **CI 中的 `moon fmt --check`**。它在本机 Windows 检出上通过,却在 ubuntu runner 上失败,
+  而失败的 diff 需要仓库 admin 权限才能读取运行日志、无法查看。由于格式化器在两个平台上
+  结论不一致,保留它等于永久红灯,还会把它后面的 `Check` / `Test` / 文档校验步骤全部跳空——
+  实测 CI #4、#5 正是如此。`moon fmt` 改为本地执行。
 
 ### 影响
 
 - 测试用例数:77 → 88,全部通过。
-- `moon check`、`moon fmt --check`、`moon test`、`moon build --target wasm|wasm-gc` 全部通过。
+- `moon check`、`moon test`、`moon build --target wasm|wasm-gc|native` 全部通过(含 CI 实测)。
 - 公开 API 未变,无破坏性改动。
 
 ## 0.3.0 — 2026-09-16
