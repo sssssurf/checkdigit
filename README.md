@@ -195,11 +195,35 @@ status: valid
 moon test
 ```
 
-77 tests cover the three algorithms against published reference vectors, the
+88 tests cover the three algorithms against published reference vectors, the
 issuer-range overlap boundaries, IBAN's published examples, the worked examples
 of each identifier standard, the internal lookup tables, and malformed input.
 The LEI vectors are identifiers registered with GLEIF, so the expected check
 digits come from the registry rather than from a restatement of the algorithm.
+
+`robustness_test.mbt` additionally drives every public entry point with hostile
+input — empty and whitespace-only strings, full-width and Arabic-Indic digits,
+over-long strings, inner spaces, a trailing NUL — to pin down the promise that
+every function is total: invalid input returns `false` or `None`, never a panic.
+
+## Development
+
+- [`docs/reproducible-demo.md`](docs/reproducible-demo.md) — how to build, test and
+  run the project, with the exact commands and their expected output.
+- [`docs/development-retrospective.md`](docs/development-retrospective.md) — key
+  architectural decisions and their trade-offs, the role of AI tooling in the
+  build, the standards referenced, and the known limitations.
+- [`CHANGELOG.md`](CHANGELOG.md) — what changed in each version.
+
+## Runnable example
+
+```bash
+moon run cmd/demo
+```
+
+`cmd/demo` is a tour of all thirteen identifiers. Every line it prints is produced
+by the library at run time, and the last section shows five pieces of junk input
+being rejected without a panic.
 
 ## References
 

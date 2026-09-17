@@ -16,11 +16,34 @@ jobs:
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
-      - name: Build
-        run: moon build
+      - name: Format check
+        run: moon fmt --check
 
       - name: Check
         run: moon check
 
       - name: Test
         run: moon test
+
+  # The README and the project description both claim the library compiles for
+  # native, wasm and wasm-gc. Verifying only the default target let that claim
+  # drift silently, so each target is now built explicitly.
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [wasm, wasm-gc, native]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Build (${{ matrix.target }})
+        run: moon build --target ${{ matrix.target }}
+
+      - name: Test (${{ matrix.target }})
+        run: moon test --target ${{ matrix.target }}
