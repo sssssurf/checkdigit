@@ -31,6 +31,14 @@ pub impl Show for CardBrand with fn to_string(self) -> String {
 }
 
 ///|
+/// `Show` has two methods, `output` and `to_string`, and `#must_implement_one`
+/// lets an `impl` supply either. The one it leaves to the default is still
+/// promoted onto `CardBrand` as a regular method, which the compiler warns
+/// about (E0079) because a later refactor could drop it without notice. Both
+/// are named here so the promotion is stated rather than implied.
+pub extend CardBrand with Show::{output, to_string}
+
+///|
 /// Identify the card network from its issuer range. The most specific ranges
 /// are tested first (Discover's 622126-622925 range overlaps UnionPay's 62).
 pub fn detect_brand(s : String) -> CardBrand {

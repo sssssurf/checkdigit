@@ -116,9 +116,10 @@ pub enum CardBrand {
   Maestro
   Unknown
 }
+pub fn CardBrand::output(Self, &Logger) -> Unit
+pub fn CardBrand::to_string(Self) -> String
 pub impl Show for CardBrand
 
 // Type aliases
 
 // Traits
-
