@@ -267,7 +267,21 @@ if (!cliBlock) {
 // ---------------------------------------------------------------------------
 console.log('check-docs: verifying that documentation matches real output\n');
 for (const n of notes) console.log('  ok    ' + n);
-for (const f of failures) console.log('  FAIL  ' + f);
+for (const f of failures) {
+  console.log('  FAIL  ' + f);
+  // The raw run log needs repository admin rights to download, so a failure
+  // that only reproduces on the runner is otherwise invisible to anyone
+  // without them. A workflow command turned into an annotation lands on the
+  // public check-run record instead, where the whole recorded-vs-actual diff
+  // can be read. Only emitted under CI so local runs stay readable.
+  if (process.env.GITHUB_ACTIONS) {
+    const escaped = f
+      .replace(/%/g, '%25')
+      .replace(/\r/g, '%0D')
+      .replace(/\n/g, '%0A');
+    console.log('::error::' + escaped);
+  }
+}
 
 console.log('');
 rmSync(SCRATCH, { recursive: true, force: true });
