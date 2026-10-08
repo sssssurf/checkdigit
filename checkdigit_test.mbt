@@ -564,3 +564,116 @@ test "cn_id check character agrees with the validator" {
     assert_true(@checkdigit.cn_id_valid(p + c.to_lower()))
   }
 }
+
+///|
+test "gtin check digit matches published retail vectors" {
+  // EAN-13, EAN-8 and UPC-A examples from common references.
+  assert_eq(@checkdigit.gtin_check_digit("400638133393").unwrap(), 1)
+  assert_eq(@checkdigit.gtin_check_digit("590123412345").unwrap(), 7)
+  assert_eq(@checkdigit.gtin_check_digit("9638507").unwrap(), 4)
+  assert_eq(@checkdigit.gtin_check_digit("03600029145").unwrap(), 2)
+  assert_eq(@checkdigit.gtin_check_digit("1001234567890").unwrap(), 2)
+  assert_true(@checkdigit.gtin_check_digit("") is None)
+  assert_true(@checkdigit.gtin_check_digit("12a") is None)
+}
+
+///|
+test "retail validators agree with the vectors" {
+  assert_true(@checkdigit.ean13_valid("4006381333931"))
+  assert_true(@checkdigit.ean13_valid("5901234123457"))
+  assert_true(@checkdigit.ean8_valid("96385074"))
+  assert_true(@checkdigit.upca_valid("036000291452"))
+  assert_true(@checkdigit.upca_valid("042100005264"))
+  assert_true(@checkdigit.gtin14_valid("10012345678902"))
+
+  // A single changed digit fails on exactly one of these.
+  assert_false(@checkdigit.ean13_valid("4006381333932"))
+  assert_false(@checkdigit.ean8_valid("96385075"))
+  assert_true(@checkdigit.upca_valid("036000291452")) // unchanged control
+  assert_false(@checkdigit.upca_valid("036000291453"))
+  assert_false(@checkdigit.gtin14_valid("10012345678903"))
+}
+
+///|
+test "gtin_valid dispatches on the four registered lengths" {
+  assert_true(@checkdigit.gtin_valid("96385074")) // EAN-8
+  assert_true(@checkdigit.gtin_valid("036000291452")) // UPC-A
+  assert_true(@checkdigit.gtin_valid("4006381333931")) // EAN-13
+  assert_true(@checkdigit.gtin_valid("10012345678902")) // GTIN-14
+  // Lengths that are not registered GTIN sizes are rejected outright.
+  assert_false(@checkdigit.gtin_valid("963850741"))
+  assert_false(@checkdigit.gtin_valid("400638133393"))
+  assert_false(@checkdigit.gtin_valid(""))
+}
+
+///|
+test "upce expands to the published upca forms" {
+  // The five worked examples convert a zero-suppressed UPC-E back to the
+  // twelve-digit UPC-A it encodes; the recomputed check digit must match.
+  assert_eq(@checkdigit.upce_expand("07832309").unwrap(), "078000003239")
+  assert_eq(@checkdigit.upce_expand("02345147").unwrap(), "023450000017")
+  assert_eq(@checkdigit.upce_expand("08679339").unwrap(), "086700000939")
+  assert_eq(@checkdigit.upce_expand("06397126").unwrap(), "063200009716")
+  assert_eq(@checkdigit.upce_expand("02345673").unwrap(), "023456000073")
+}
+
+///|
+test "upce check digit and validation" {
+  assert_eq(@checkdigit.upce_check_digit("0783230").unwrap(), 9)
+  assert_true(@checkdigit.upce_valid("07832309"))
+  assert_true(@checkdigit.upce_valid("02345147"))
+  assert_false(@checkdigit.upce_valid("07832300"))
+  // Number systems above 1 and any non-digit are rejected.
+  assert_false(@checkdigit.upce_valid("27832309"))
+  assert_true(@checkdigit.upce_expand("27832309") is None)
+  assert_true(@checkdigit.upce_expand("0783230") is None)
+}
+
+///|
+test "isbn10 check character and validation" {
+  assert_eq(@checkdigit.isbn10_check_char("030640615").unwrap(), '2')
+  assert_eq(@checkdigit.isbn10_check_char("080442957").unwrap(), 'X')
+  assert_true(@checkdigit.isbn10_valid("0306406152"))
+  assert_true(@checkdigit.isbn10_valid("080442957X"))
+  assert_true(@checkdigit.isbn10_valid("080442957x")) // lowercase accepted
+  assert_false(@checkdigit.isbn10_valid("0306406153"))
+  assert_false(@checkdigit.isbn10_valid("030640615"))
+  assert_true(@checkdigit.isbn10_check_char("03064061a") is None)
+}
+
+///|
+test "isbn13 is an ean13 restricted to the bookland prefixes" {
+  assert_eq(@checkdigit.isbn13_check_digit("978030640615").unwrap(), 7)
+  assert_eq(@checkdigit.isbn13_check_digit("979123456789").unwrap(), 6)
+  assert_true(@checkdigit.isbn13_valid("9780306406157"))
+  assert_true(@checkdigit.isbn13_valid("9791234567896"))
+  // A valid EAN-13 whose prefix is not 978 or 979 is not an ISBN.
+  assert_true(@checkdigit.ean13_valid("4006381333931"))
+  assert_false(@checkdigit.isbn13_valid("4006381333931"))
+  assert_true(@checkdigit.isbn13_check_digit("400638133393") is None)
+  assert_false(@checkdigit.isbn13_valid("9780306406158"))
+}
+
+///|
+test "isbn10 converts to isbn13" {
+  assert_eq(@checkdigit.isbn10_to_isbn13("0306406152").unwrap(), "9780306406157")
+  assert_eq(@checkdigit.isbn10_to_isbn13("080442957X").unwrap(), "9780804429573")
+  // Whatever the conversion yields must pass the ISBN-13 validator.
+  let converted = @checkdigit.isbn10_to_isbn13("0306406152").unwrap()
+  assert_true(@checkdigit.isbn13_valid(converted))
+  assert_true(@checkdigit.isbn10_to_isbn13("0306406153") is None)
+}
+
+///|
+test "issn check character and validation" {
+  assert_eq(@checkdigit.issn_check_char("0378595").unwrap(), '5')
+  assert_eq(@checkdigit.issn_check_char("2049363").unwrap(), '0')
+  // Body chosen so the check character is X, exercising that branch.
+  assert_eq(@checkdigit.issn_check_char("1234561").unwrap(), 'X')
+  assert_true(@checkdigit.issn_valid("03785955"))
+  assert_true(@checkdigit.issn_valid("20493630"))
+  assert_true(@checkdigit.issn_valid("1234561X"))
+  assert_true(@checkdigit.issn_valid("1234561x"))
+  assert_false(@checkdigit.issn_valid("03785956"))
+  assert_true(@checkdigit.issn_check_char("037859a") is None)
+}
