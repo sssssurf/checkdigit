@@ -6,8 +6,9 @@
 
 | 项 | 值 |
 |---|---|
-| MoonBit 工具链 | `moon 0.1.20260608 (60bc8c3 2026-06-08)` |
-| 平台 | Windows 10.0.26200 / x86_64 |
+| MoonBit 工具链 | `moon 0.1.20260920 (914d7da 2026-09-20)` |
+| moonc | `v0.10.14+7d59c7ec9`(验收要求 ≥ 0.10.14) |
+| 平台 | Windows 11 / WSL Ubuntu-24.04 · x86_64 |
 | 外部依赖 | 无(`moon.mod` 无 `deps` 段) |
 
 检查工具链版本:
@@ -25,7 +26,7 @@ moon test
 期望输出(末行):
 
 ```text
-Total tests: 88, passed: 88, failed: 0.
+Total tests: 97, passed: 97, failed: 0.
 ```
 
 测试分三层:
@@ -34,7 +35,7 @@ Total tests: 88, passed: 88, failed: 0.
 |---|---|---|
 | `checkdigit_wbtest.mbt` | 白盒 | 直接测试包内私有辅助函数与各张权重表 |
 | `checkdigit_test.mbt` | 黑盒 | 只调用 `pub fn`,用公开标准样例作参考向量 |
-| `robustness_test.mbt` | 对抗 | 23 种恶意输入横穿 50 个公开函数调用点 |
+| `robustness_test.mbt` | 对抗 | 21 种恶意输入横穿 66 个公开函数调用点 |
 
 `robustness_test.mbt` 的意义是把"全函数、不 panic"这条承诺变成可执行的断言:空串、纯空白、
 全角数字、阿拉伯-印度数字、超长串、内嵌空格、尾部 NUL 等输入如果让任何函数 abort,
@@ -46,7 +47,7 @@ Total tests: 88, passed: 88, failed: 0.
 moon run cmd/demo
 ```
 
-这是覆盖全部 13 种标识符的端到端演示。**输出全部由库在运行时产生,没有任何硬编码**,
+这是覆盖全部 21 种标识符的端到端演示。**输出全部由库在运行时产生,没有任何硬编码**,
 所以校验逻辑一旦回归,这段输出就会跟着变。
 
 完整输出:
@@ -108,6 +109,18 @@ cnpj_format(11222333000181): 11.222.333/0001-81
 bsn_valid(111222333): valid
 cf_valid(RSSMRA85T10A562S): valid
 
+== product and publication numbers ==
+ean13_valid(4006381333931): valid
+gtin_check_digit(400638133393): 1
+ean8_valid(96385074): valid
+upca_valid(036000291452): valid
+upce_expand(07832309): 078000003239
+gtin14_valid(10012345678902): valid
+isbn10_valid(0306406152): valid
+isbn13_valid(9780306406157): valid
+isbn10_to_isbn13(0306406152): 9780306406157
+issn_valid(03785955): valid
+
 == the totality promise: bad input never panics ==
   [] -> luhn=false cnid=false iban=false
   [ ] -> luhn=false cnid=false iban=false
@@ -130,7 +143,7 @@ moon run cmd/main -- imei 490154203237518
 moon run cmd/main -- lei 529900T8BM49AURSDO55
 ```
 
-16 个子命令完整列表可以直接无参数运行 `moon run cmd/main` 得到:
+20 个子命令完整列表可以直接无参数运行 `moon run cmd/main` 得到:
 
 ```text
 checkdigit — check digits and identifier validation for MoonBit
@@ -145,7 +158,16 @@ usage:
   checkdigit aadhaar  <12 digits>
   checkdigit vin      <vin>
   checkdigit isin     <isin>
-  ...
+  checkdigit lei      <lei>
+  checkdigit uscc     <unified social credit id>
+  checkdigit cpf      <cpf>
+  checkdigit cnpj     <cnpj>
+  checkdigit bsn      <8 or 9 digits>
+  checkdigit cf       <codice fiscale>
+  checkdigit gtin     <8, 12, 13 or 14 digits>
+  checkdigit upce     <8-digit upc-e>
+  checkdigit isbn     <isbn-10 or isbn-13>
+  checkdigit issn     <issn>
 ```
 
 ## 四、验证三个编译目标
@@ -182,10 +204,10 @@ node scripts/check-docs.mjs
 
 它会实际执行这些命令,然后逐字比对:
 
-1. `cmd/demo` 的输出与本文记录的 56 行输出
+1. `cmd/demo` 的输出与本文记录的 67 行输出
 2. `README.md` 里记录的 CLI 输出块
 3. 两份 README 声称的测试数,与 `moon test` 实际报告的数字
-4. `README.md` 命令列表里的 16 条命令是否都能成功退出
+4. `README.md` 命令列表里的 20 条命令是否都能成功退出
 
 期望输出:
 

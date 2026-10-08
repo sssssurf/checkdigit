@@ -3,6 +3,36 @@
 本文件按时间倒序记录每个版本的实质改动,用于对应验收标准中「工作有效:已有项目必须包含
 本期完成的实质新增工作」一条。
 
+## 0.4.0 — 2026-10-08
+
+十月赛新增:GS1 商品条码与出版物编号两组标识符。
+
+### 新增
+
+- **`gs1.mbt`**:GTIN 零售条码。`gtin_check_digit` 实现从右向左 3-1 交错的 mod-10
+  校验位;`ean8_valid` / `upca_valid` / `ean13_valid` / `gtin14_valid` 分别校验四种
+  注册长度,`gtin_valid` 按长度分派。`upce_expand` 把零压缩的 8 位 UPC-E 还原成
+  12 位 UPC-A(校验位按展开后的载荷重算),`upce_valid` 以该 UPC-A 校验位为准。
+- **`isbn.mbt`**:出版物编号。`isbn10_valid` / `isbn10_check_char`(权重 10→2,校验
+  字符可为 `X`);`isbn13_valid` / `isbn13_check_digit` 限定 978 / 979 前缀并复用 GS1
+  校验位;`isbn10_to_isbn13` 在两种形式间转换;`issn_valid` / `issn_check_char`
+  (权重 8→2)。
+- 四个新的 CLI 子命令:`gtin`、`upce`、`isbn`、`issn`(16 → 20)。
+- `cmd/demo` 新增 "product and publication numbers" 一节(覆盖标识符 13 → 21)。
+
+### 变更
+
+- **测试**:新增 9 组参考向量(EAN-8/13、UPC-A、GTIN-14、UPC-E 五组展开样例、
+  ISBN-10/13、ISSN),`moon test` 由 88 增至 97,全部通过;对抗测试矩阵加入 5 个校验器、
+  5 个校验位生成器、2 个提取器,恶意输入 21 种、公开函数调用点 66 个。
+- **元数据与文档**:`moon.mod` 版本 0.3.0 → 0.4.0,关键字与描述加入 `ean`、`gtin`、
+  `isbn`、`issn`;`README.md` / `README.mbt.md` / `docs/reproducible-demo.md` 同步
+  (覆盖率表、CLI 示例、校验位示例、测试数 88 → 97、参考标准 GS1 / ISO 2108 / ISO 3297)。
+
+### 影响
+
+- 公开 API 仅新增,无破坏性改动。
+
 ## Unreleased — 2026-09-18
 
 本轮加固可复现性:文档里记录的命令输出不再依赖人工维护,而是被自动校验。

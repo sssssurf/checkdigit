@@ -10,8 +10,9 @@ numbering schemes, and builds the identifier formats on top of them: payment
 cards (ISO/IEC 7812), IBAN bank accounts (ISO 13616), IMEI device numbers
 (3GPP TS 23.003), Chinese resident identity cards (GB 11643), Aadhaar numbers,
 VINs (ISO 3779), ISINs (ISO 6166), LEIs (ISO 17442), unified social credit
-identifiers (GB 32100), CPF and CNPJ (Brazil), BSN (Netherlands), and the
-Italian codice fiscale.
+identifiers (GB 32100), CPF and CNPJ (Brazil), BSN (Netherlands), the Italian
+codice fiscale, the GS1 retail barcodes (EAN-8, UPC-A, EAN-13, GTIN-14, UPC-E),
+and the bibliographic numbers (ISBN-10, ISBN-13, ISSN).
 
 ```moonbit nocheck
 ///|
@@ -38,6 +39,11 @@ fn main {
   println(cpf_format("11144477735")) // Some("111.444.777-35")
   println(cnpj_format("11222333000181")) // Some("11.222.333/0001-81")
   println(uscc_division("91350100M000100Y43")) // Some("350100")
+
+  // Retail barcodes and bibliographic numbers
+  println(ean13_valid("4006381333931")) // true
+  println(upce_expand("07832309")) // Some("078000003239")
+  println(isbn10_to_isbn13("0306406152")) // Some("9780306406157")
 }
 ```
 
@@ -61,6 +67,8 @@ fn main {
 | CNPJ (Brazil) | `cnpj_valid`, `cnpj_check_digits`, `cnpj_format` |
 | BSN (Netherlands) | `bsn_valid`, `bsn_check_digit` |
 | Codice fiscale (Italy) | `cf_valid`, `cf_check_char` |
+| GTIN / retail barcode (GS1) | `gtin_valid`, `gtin_check_digit`, `ean8_valid`, `ean13_valid`, `upca_valid`, `upce_valid`, `gtin14_valid`, `upce_expand`, `upce_check_digit` |
+| ISBN / ISSN (bibliographic) | `isbn10_valid`, `isbn10_check_char`, `isbn13_valid`, `isbn13_check_digit`, `isbn10_to_isbn13`, `issn_valid`, `issn_check_char` |
 
 All validators are total: they take a `String` and return `Bool`, or return
 `None` when a value cannot be computed. No exceptions, no panics on bad input.
@@ -130,6 +138,18 @@ All validators are total: they take a `String` and return `Bool`, or return
   the required layout, including the twelve month codes, which skip the letters
   that would spell words, and the omocodia letters that stand in for digits when
   two people would otherwise share a code.
+- **Retail barcodes (GS1)** — the GTIN family: EAN-8, UPC-A, EAN-13 and GTIN-14
+  all share one mod-10 check digit computed with the alternating 3-1 weighting
+  read from the right, so `gtin_valid` accepts any of the four registered
+  lengths. UPC-E is the zero-suppressed form of UPC-A; `upce_expand` restores the
+  twelve-digit UPC-A, and that expansion is what the UPC-E check digit is
+  verified against.
+- **ISBN and ISSN** — ISBN-10 carries a mod-11 check character that may be `X`
+  (ten), under weights 10 down to 2. ISBN-13 is an EAN-13 restricted to the 978
+  and 979 bookland prefixes, so it reuses the GS1 check digit, and
+  `isbn10_to_isbn13` converts a ten-character ISBN to its thirteen-character
+  form. ISSN is an eight-character serial number with its own mod-11 check
+  character, verified with weights 8 down to 2.
 
 ## Installation
 
@@ -158,6 +178,10 @@ moon run cmd/main -- cpf 11144477735
 moon run cmd/main -- cnpj 11222333000181
 moon run cmd/main -- bsn 111222333
 moon run cmd/main -- cf RSSMRA85T10A562S
+moon run cmd/main -- gtin 4006381333931
+moon run cmd/main -- upce 07832309
+moon run cmd/main -- isbn 9780306406157
+moon run cmd/main -- issn 03785955
 ```
 
 ```text
@@ -173,6 +197,23 @@ lei: 529900T8BM49AURSDO55
 lou: 5299
 expected check digits: 55
 status: valid
+
+$ moon run cmd/main -- gtin 4006381333931
+gtin: 4006381333931
+expected check digit: 1
+status: valid
+
+$ moon run cmd/main -- upce 07832309
+upce: 07832309
+expands to: 078000003239
+expected check digit: 9
+status: valid
+
+$ moon run cmd/main -- isbn 9780306406157
+isbn: 9780306406157
+form: isbn-13
+expected check digit: 7
+status: valid
 ```
 
 ## 与现有库的关系（互补边界）
@@ -187,8 +228,8 @@ status: valid
 | `ZJH-666-ZJH/moonmrz` | ICAO 9303 机读区（护照 / 签证 MRZ）的 7-3-1 校验位 | 唯一的交集是"校验位"这个概念。它面向**旅行证件 MRZ 文本**，使用 ICAO 9303 的 7-3-1 加权方案；本库面向**支付卡 / 银行账号 / 设备号 / 证券与法人标识**，使用 Luhn、Verhoeff、Damm、ISO 7064 与 mod-97。两者的算法、输入格式、应用领域均不同。 |
 
 在 mooncakes.io 上以 `luhn`、`iban`、`imei`、`aadhaar`、`vin`、`isin`、`lei`、
-`uscc`、`cpf`、`cnpj`、`bsn`、`codice fiscale` 检索，目前**没有任何**模块命中；
-本库填补的是这一块空白。
+`uscc`、`cpf`、`cnpj`、`bsn`、`codice fiscale`、`ean`、`gtin`、`isbn`、`issn`
+检索，目前**没有任何**模块命中；本库填补的是这一块空白。
 
 ## Testing
 
@@ -196,7 +237,7 @@ status: valid
 moon test
 ```
 
-88 tests cover the three algorithms against published reference vectors, the
+97 tests cover the three algorithms against published reference vectors, the
 issuer-range overlap boundaries, IBAN's published examples, the worked examples
 of each identifier standard, the internal lookup tables, and malformed input.
 The LEI vectors are identifiers registered with GLEIF, so the expected check
@@ -206,7 +247,7 @@ digits come from the registry rather than from a restatement of the algorithm.
 input — empty and whitespace-only strings, full-width and Arabic-Indic digits,
 over-long strings, inner spaces, a trailing NUL — to pin down the promise that
 every function is total: invalid input returns `false` or `None`, never a panic.
-With the boundary tests in `checkdigit_test.mbt`, the suite now stands at 88.
+With the boundary tests in `checkdigit_test.mbt`, the suite now stands at 97.
 
 The command output recorded in this file and in `docs/reproducible-demo.md` is
 itself checked, so it cannot silently go stale:
@@ -233,7 +274,7 @@ line, including the test count quoted above.
 moon run cmd/demo
 ```
 
-`cmd/demo` is a tour of all thirteen identifiers. Every line it prints is produced
+`cmd/demo` is a tour of all twenty-one identifiers. Every line it prints is produced
 by the library at run time, and the last section shows five pieces of junk input
 being rejected without a panic.
 
@@ -247,6 +288,9 @@ being rejected without a panic.
 - ISO 3779 — Vehicle Identification Number (VIN), world manufacturer identifier
 - ISO 6166 — International Securities Identification Number (ISIN)
 - ISO 17442 — Legal Entity Identifier (LEI)
+- GS1 General Specifications — GTIN check digit and UPC-E zero suppression
+- ISO 2108 — International Standard Book Number (ISBN)
+- ISO 3297 — International Standard Serial Number (ISSN)
 - UIDAI — Aadhaar number specification (Verhoeff check digit)
 - Receita Federal — CPF and CNPJ check-digit specification
 - De Nederlandsche Bank — BSN eleven-test (11-proef)
