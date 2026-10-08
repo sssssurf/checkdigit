@@ -44,6 +44,16 @@ pub fn damm_valid(String) -> Bool
 
 pub fn detect_brand(String) -> CardBrand
 
+pub fn ean13_valid(String) -> Bool
+
+pub fn ean8_valid(String) -> Bool
+
+pub fn gtin14_valid(String) -> Bool
+
+pub fn gtin_check_digit(String) -> Int?
+
+pub fn gtin_valid(String) -> Bool
+
 pub fn iban_assemble(String, String) -> String?
 
 pub fn iban_bban(String) -> String?
@@ -68,11 +78,25 @@ pub fn imei_tac(String) -> String?
 
 pub fn imei_valid(String) -> Bool
 
+pub fn isbn10_check_char(String) -> Char?
+
+pub fn isbn10_to_isbn13(String) -> String?
+
+pub fn isbn10_valid(String) -> Bool
+
+pub fn isbn13_check_digit(String) -> Int?
+
+pub fn isbn13_valid(String) -> Bool
+
 pub fn isin_check_digit(String) -> Int?
 
 pub fn isin_country(String) -> String?
 
 pub fn isin_valid(String) -> Bool
+
+pub fn issn_check_char(String) -> Char?
+
+pub fn issn_valid(String) -> Bool
 
 pub fn lei_check_digits(String) -> String?
 
@@ -83,6 +107,14 @@ pub fn lei_valid(String) -> Bool
 pub fn luhn_check_digit(String) -> Int?
 
 pub fn luhn_valid(String) -> Bool
+
+pub fn upca_valid(String) -> Bool
+
+pub fn upce_check_digit(String) -> Int?
+
+pub fn upce_expand(String) -> String?
+
+pub fn upce_valid(String) -> Bool
 
 pub fn uscc_check_char(String) -> String?
 

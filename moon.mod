@@ -3,7 +3,7 @@
 
 name = "sssssurf/checkdigit"
 
-version = "0.3.0"
+version = "0.4.0"
 
 readme = "README.mbt.md"
 
@@ -22,7 +22,11 @@ keywords = [
   "uscc",
   "cpf",
   "cnpj",
+  "ean",
+  "gtin",
+  "isbn",
+  "issn",
   "validation",
 ]
 
-description = "Check-digit algorithms and identifier validation for MoonBit: Luhn, Verhoeff, Damm, payment cards, IBAN, IMEI, resident IDs, Aadhaar, VIN, ISIN, LEI, USCC, CPF, CNPJ, BSN, codice fiscale"
+description = "Check-digit algorithms and identifier validation for MoonBit: Luhn, Verhoeff, Damm, payment cards, IBAN, IMEI, resident IDs, Aadhaar, VIN, ISIN, LEI, USCC, CPF, CNPJ, BSN, codice fiscale, GS1 retail barcodes (EAN/UPC/GTIN) and bibliographic numbers (ISBN, ISSN)"
