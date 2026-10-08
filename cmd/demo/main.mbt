@@ -141,6 +141,18 @@ fn main {
   show_bool("bsn_valid(111222333)", @cd.bsn_valid("111222333"))
   show_bool("cf_valid(RSSMRA85T10A562S)", @cd.cf_valid("RSSMRA85T10A562S"))
 
+  heading("product and publication numbers")
+  show_bool("ean13_valid(4006381333931)", @cd.ean13_valid("4006381333931"))
+  show_int("gtin_check_digit(400638133393)", @cd.gtin_check_digit("400638133393"))
+  show_bool("ean8_valid(96385074)", @cd.ean8_valid("96385074"))
+  show_bool("upca_valid(036000291452)", @cd.upca_valid("036000291452"))
+  show_opt("upce_expand(07832309)", @cd.upce_expand("07832309"))
+  show_bool("gtin14_valid(10012345678902)", @cd.gtin14_valid("10012345678902"))
+  show_bool("isbn10_valid(0306406152)", @cd.isbn10_valid("0306406152"))
+  show_bool("isbn13_valid(9780306406157)", @cd.isbn13_valid("9780306406157"))
+  show_opt("isbn10_to_isbn13(0306406152)", @cd.isbn10_to_isbn13("0306406152"))
+  show_bool("issn_valid(03785955)", @cd.issn_valid("03785955"))
+
   heading("the totality promise: bad input never panics")
   let hostile = [
     "", " ", "not-a-number", "1234567890", "9999999999999999999999",

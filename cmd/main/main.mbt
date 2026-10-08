@@ -28,6 +28,10 @@ fn main {
     "cnpj" => run_cnpj(input)
     "bsn" => run_bsn(input)
     "cf" => run_cf(input)
+    "gtin" => run_gtin(input)
+    "upce" => run_upce(input)
+    "isbn" => run_isbn(input)
+    "issn" => run_issn(input)
     _ => print_usage()
   }
 }
@@ -53,6 +57,10 @@ fn print_usage() -> Unit {
   println("  checkdigit cnpj     <cnpj>")
   println("  checkdigit bsn      <8 or 9 digits>")
   println("  checkdigit cf       <codice fiscale>")
+  println("  checkdigit gtin     <8, 12, 13 or 14 digits>")
+  println("  checkdigit upce     <8-digit upc-e>")
+  println("  checkdigit isbn     <isbn-10 or isbn-13>")
+  println("  checkdigit issn     <issn>")
 }
 
 ///|
@@ -271,4 +279,97 @@ fn run_cf(s : String) -> Unit {
   println("cf: \{s}")
   show_check("expected check character", take(s, 15), @checkdigit.cf_check_char)
   println("status: \{verdict(@checkdigit.cf_valid(s))}")
+}
+
+///|
+/// Number of characters in `s`.
+fn count(s : String) -> Int {
+  let mut n = 0
+  for c in s {
+    let _ = c
+    n = n + 1
+  }
+  n
+}
+
+///|
+/// A one-character string, for printing a `Char?` as text.
+fn cstr(c : Char) -> String {
+  let buf = StringBuilder()
+  buf.write_char(c)
+  buf.to_string()
+}
+
+///|
+/// Render an optional character.
+fn show_char_opt(label : String, v : Char?) -> Unit {
+  match v {
+    Some(c) => println("\{label}: \{cstr(c)}")
+    None => println("\{label}: (none)")
+  }
+}
+
+///|
+fn run_gtin(s : String) -> Unit {
+  println("gtin: \{s}")
+  let n = count(s)
+  if n < 2 {
+    show_digit("expected check digit", None)
+  } else {
+    match take(s, n - 1) {
+      Some(body) =>
+        show_digit("expected check digit", @checkdigit.gtin_check_digit(body))
+      None => show_digit("expected check digit", None)
+    }
+  }
+  println("status: \{verdict(@checkdigit.gtin_valid(s))}")
+}
+
+///|
+fn run_upce(s : String) -> Unit {
+  println("upce: \{s}")
+  show_opt("expands to", @checkdigit.upce_expand(s))
+  match take(s, 7) {
+    Some(body) =>
+      show_digit("expected check digit", @checkdigit.upce_check_digit(body))
+    None => show_digit("expected check digit", None)
+  }
+  println("status: \{verdict(@checkdigit.upce_valid(s))}")
+}
+
+///|
+fn run_isbn(s : String) -> Unit {
+  println("isbn: \{s}")
+  if count(s) == 10 {
+    println("form: isbn-10")
+    match take(s, 9) {
+      Some(body) =>
+        show_char_opt(
+          "expected check character",
+          @checkdigit.isbn10_check_char(body),
+        )
+      None => show_char_opt("expected check character", None)
+    }
+    show_opt("as isbn-13", @checkdigit.isbn10_to_isbn13(s))
+    println("status: \{verdict(@checkdigit.isbn10_valid(s))}")
+  } else {
+    println("form: isbn-13")
+    match take(s, 12) {
+      Some(body) =>
+        show_digit("expected check digit", @checkdigit.isbn13_check_digit(body))
+      None => show_digit("expected check digit", None)
+    }
+    println("status: \{verdict(@checkdigit.isbn13_valid(s))}")
+  }
+}
+
+///|
+fn run_issn(s : String) -> Unit {
+  println("issn: \{s}")
+  match take(s, 7) {
+    Some(body) =>
+      show_char_opt("expected check character", @checkdigit.issn_check_char(body))
+    None => show_char_opt("expected check character", None)
+  }
+  println("status: \{verdict(@checkdigit.issn_valid(s))}")
 }
