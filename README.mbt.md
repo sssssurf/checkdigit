@@ -261,6 +261,11 @@ line, including the test count quoted above.
 
 ## Development
 
+Supported backends are `wasm`, `wasm-gc`, and `native`. Native builds require a
+system C compiler. The November 12, 2026 compatibility check used `moonc
+v0.10.20+65efd5b93`. See the reproducible demo for toolchain versions and
+per-backend commands.
+
 - [`docs/reproducible-demo.md`](docs/reproducible-demo.md) — how to build, test and
   run the project, with the exact commands and their expected output.
 - [`docs/development-retrospective.md`](docs/development-retrospective.md) — key

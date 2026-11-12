@@ -20,7 +20,7 @@
 // Reads only committed files, so it fails loudly when a doc update is forgotten.
 
 import { readFile } from 'node:fs/promises';
-import { readFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { closeSync, openSync, readFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -47,20 +47,19 @@ async function readDoc(rel) {
 /**
  * Run a command from the repo root and return its combined output.
  *
- * Output is captured through a shell redirection into a scratch file rather than
- * a pipe. Piped stdio is the one thing this project's development sandbox
- * forbids, so `execFileSync(..., {stdio: 'pipe'})` dies with EPERM while a
- * redirected shell works. The indirection also keeps this script portable: only
- * `shell: true` and `>` are required, both available on Windows and Linux.
+ * Give Moon a real file for stdout and stderr. On Windows the current Moon
+ * crashes at exit when launched through cmd.exe with ignored output handles,
+ * even if cmd.exe redirects its output. Direct arguments also preserve spaces.
  */
 function run(file, args) {
   const outFile = path.join(SCRATCH, `out-${scratchSeq++}.txt`);
-  // Quote every argument for the shell. Double quotes are sufficient here: none
-  // of the arguments contain quotes, and this keeps the command readable.
-  const cmd =
-    [file, ...args].map((a) => (/[\s]/.test(a) ? `"${a}"` : a)).join(' ') +
-    ` > "${outFile}" 2>&1`;
-  const res = spawnSync(cmd, { cwd: ROOT, shell: true, stdio: 'ignore' });
+  const fd = openSync(outFile, 'w');
+  let res;
+  try {
+    res = spawnSync(file, args, { cwd: ROOT, stdio: ['ignore', fd, fd] });
+  } finally {
+    closeSync(fd);
+  }
   if (res.error) {
     return { failed: true, code: null, out: `spawn error: ${res.error.message}` };
   }

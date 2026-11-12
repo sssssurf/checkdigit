@@ -2,11 +2,11 @@
 package "sssssurf/checkdigit"
 
 // Values
-pub fn aadhaar_check_digit(String) -> Int?
+pub fn aadhaar_check_digit(String) -> Int32?
 
 pub fn aadhaar_valid(String) -> Bool
 
-pub fn bsn_check_digit(String) -> Int?
+pub fn bsn_check_digit(String) -> Int32?
 
 pub fn bsn_valid(String) -> Bool
 
@@ -38,7 +38,7 @@ pub fn cpf_format(String) -> String?
 
 pub fn cpf_valid(String) -> Bool
 
-pub fn damm_check_digit(String) -> Int?
+pub fn damm_check_digit(String) -> Int32?
 
 pub fn damm_valid(String) -> Bool
 
@@ -50,7 +50,7 @@ pub fn ean8_valid(String) -> Bool
 
 pub fn gtin14_valid(String) -> Bool
 
-pub fn gtin_check_digit(String) -> Int?
+pub fn gtin_check_digit(String) -> Int32?
 
 pub fn gtin_valid(String) -> Bool
 
@@ -62,7 +62,7 @@ pub fn iban_check_digits(String, String) -> String?
 
 pub fn iban_country(String) -> String?
 
-pub fn iban_expected_length(String) -> Int?
+pub fn iban_expected_length(String) -> Int32?
 
 pub fn iban_format(String) -> String?
 
@@ -70,7 +70,7 @@ pub fn iban_normalize(String) -> String
 
 pub fn iban_valid(String) -> Bool
 
-pub fn imei_check_digit(String) -> Int?
+pub fn imei_check_digit(String) -> Int32?
 
 pub fn imei_serial(String) -> String?
 
@@ -84,11 +84,11 @@ pub fn isbn10_to_isbn13(String) -> String?
 
 pub fn isbn10_valid(String) -> Bool
 
-pub fn isbn13_check_digit(String) -> Int?
+pub fn isbn13_check_digit(String) -> Int32?
 
 pub fn isbn13_valid(String) -> Bool
 
-pub fn isin_check_digit(String) -> Int?
+pub fn isin_check_digit(String) -> Int32?
 
 pub fn isin_country(String) -> String?
 
@@ -104,13 +104,13 @@ pub fn lei_lou(String) -> String?
 
 pub fn lei_valid(String) -> Bool
 
-pub fn luhn_check_digit(String) -> Int?
+pub fn luhn_check_digit(String) -> Int32?
 
 pub fn luhn_valid(String) -> Bool
 
 pub fn upca_valid(String) -> Bool
 
-pub fn upce_check_digit(String) -> Int?
+pub fn upce_check_digit(String) -> Int32?
 
 pub fn upce_expand(String) -> String?
 
@@ -122,7 +122,7 @@ pub fn uscc_division(String) -> String?
 
 pub fn uscc_valid(String) -> Bool
 
-pub fn verhoeff_check_digit(String) -> Int?
+pub fn verhoeff_check_digit(String) -> Int32?
 
 pub fn verhoeff_valid(String) -> Bool
 

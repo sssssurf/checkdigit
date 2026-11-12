@@ -6,15 +6,16 @@
 
 | 项 | 值 |
 |---|---|
-| MoonBit 工具链 | `moon 0.1.20260920 (914d7da 2026-09-20)` |
-| moonc | `v0.10.14+7d59c7ec9`(验收要求 ≥ 0.10.14) |
-| 平台 | Windows 11 / WSL Ubuntu-24.04 · x86_64 |
-| 外部依赖 | 无(`moon.mod` 无 `deps` 段) |
+| 维护验证日期 | 2026-11-12（北京时间） |
+| moon / moonrun | `0.1.20261104 (940aa18 2026-11-04)` |
+| moonc | `v0.10.20+65efd5b93 (2026-11-05)` |
+| 平台 | Windows x86_64 和 WSL Ubuntu 24.04 x86_64 |
+| 外部依赖 | 无第三方模块 |
 
 检查工具链版本:
 
 ```bash
-moon version
+moon version --all
 ```
 
 ## 一、跑测试
@@ -173,10 +174,17 @@ usage:
 ## 四、验证三个编译目标
 
 ```bash
-moon build --target wasm
-moon build --target wasm-gc
-moon build --target native
+for target in wasm wasm-gc native; do
+  moon check --target "$target"
+  moon build --target "$target"
+  moon test --target "$target"
+done
 ```
+
+本次在 WSL 上逐个完成三个目标的检查、构建与测试，各通过 97 项。Windows 上的
+`wasm` 和 `wasm-gc` 也各通过 97 项。Windows 的文档校验重跑了全部 20 条 README
+CLI 命令，并比对了 5 组输出快照和 67 行演示输出。WSL 的 Native 演示输出与本页
+一致，ISBN 命令输出 `status: valid`。
 
 前两个目标不依赖任何系统库。`native` 目标在链接阶段需要一个 C 编译器
 (`cl` / `clang` / `gcc` 之一);若本机没有,会报
